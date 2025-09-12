@@ -7,10 +7,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <exception>
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <thread>
-#include <vector>
 
 /**
  * Asynchronous TCP Echo Server using C++20 coroutines
@@ -129,13 +126,8 @@ asio::awaitable<void> accept_connections(asio::io_context& io, unsigned short po
     }
 }
 
-/**
- * Main entry point.
- * Sets up the server with multi-threaded execution and signal handling.
- */
 int main() {
     try {
-        /** Create IO context for all async operations */
         asio::io_context io_context;
         auto work_quard = asio::make_work_guard(io_context);
 
@@ -156,7 +148,7 @@ int main() {
         /** Create thread pool for running io_context */
         asio::thread_pool pool(NUM_THREADS);
 
-        for (int i = 0; i < NUM_THREADS; ++i) {
+        for (size_t i = 0; i < NUM_THREADS; ++i) {
             asio::post(pool, [&io_context]() {
                 io_context.run();
             });
