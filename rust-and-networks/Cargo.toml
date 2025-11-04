@@ -1,0 +1,13 @@
+[workspace]
+members = [
+    "chat-server",    
+    "file-transfer", 
+    "http-proxy",   
+    "dns-resolver",
+]
+
+[package]
+name = "rust-and-networks"
+version = "0.1.0"
+edition = "2021"
+publish = false
