@@ -13,7 +13,6 @@
 #include <queue>
 #include <sstream>
 #include <stdexcept>
-#include <thread>
 
 /**
  * STRAND = EXECUTOR LOGIC + SERIALIZATION MECHANISM

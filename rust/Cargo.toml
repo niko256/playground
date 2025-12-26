@@ -3,11 +3,11 @@ members = [
     "chat-server",    
     "file-transfer", 
     "http-proxy",   
-    "dns-resolver",
+    "dns-resolver", "threads",
 ]
 
 [package]
-name = "rust-and-networks"
+name = "rust"
 version = "0.1.0"
 edition = "2021"
 publish = false
