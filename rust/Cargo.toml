@@ -1,10 +1,5 @@
 [workspace]
-members = [
-    "chat-server",    
-    "file-transfer", 
-    "http-proxy",   
-    "dns-resolver", "threads",
-]
+members = ["threads"]
 
 [package]
 name = "rust"

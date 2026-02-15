@@ -1,28 +1,21 @@
+use rayon::prelude::*;
 use std::thread;
 use std::time::Instant;
 use tokio::task;
 
+/// Calculates the sum of integers from 1 to n using the arithmetic progression formula: O(1).
+/// Previous implementation was O(n).
 fn sum_to_n(n: u64) -> u64 {
-    let mut sum = 0;
-    for i in 1..=n {
-        sum += i;
-    }
-    sum
+    n * (n + 1) / 2
 }
 
 fn single_thread_computation(n: u64) -> (u64, f64) {
     println!("Single-threaded approach...");
-
     let start = Instant::now();
 
-    let mut total_sum: u64 = 0;
-
-    for i in 1..=n {
-        total_sum += sum_to_n(i);
-    }
+    let total_sum: u64 = (1..=n).map(sum_to_n).sum();
 
     let duration = start.elapsed().as_secs_f64();
-
     println!("Total sum : {}", total_sum);
     println!("Execution time : {:.4} seconds", duration);
 
@@ -30,80 +23,59 @@ fn single_thread_computation(n: u64) -> (u64, f64) {
 }
 
 fn parallel_computation(max_num: u64) -> (u64, u64, u64, f64) {
-    println!("Multithreaded approach...");
+    println!("Multithreaded approach (std::thread)...");
     let start = Instant::now();
 
-    let handle_odd = thread::spawn(move || {
-        let mut total_odd: u64 = 0;
-
-        // skip even numbers
-        for n in (1..=max_num).step_by(2) {
-            total_odd += sum_to_n(n);
-        }
-        total_odd
-    });
-
-    let handle_even = thread::spawn(move || {
-        let mut total_even: u64 = 0;
-
-        // skip odd numbers
-        for n in (2..=max_num).step_by(2) {
-            total_even += sum_to_n(n);
-        }
-        total_even
-    });
+    let handle_odd = thread::spawn(move || (1..=max_num).step_by(2).map(sum_to_n).sum::<u64>());
+    let handle_even = thread::spawn(move || (2..=max_num).step_by(2).map(sum_to_n).sum::<u64>());
 
     let sum_odd = handle_odd
         .join()
-        .expect("Error in computation the sum of odd numbers");
+        .expect("Error computing the sum of odd numbers");
     let sum_even = handle_even
         .join()
-        .expect("Error in computation the sum of even numbers");
+        .expect("Error computing the sum of even numbers");
 
     let total_sum = sum_odd + sum_even;
-
     let duration = start.elapsed().as_secs_f64();
 
-    println!("Sum of odd numers : {}", sum_odd);
+    println!("Sum of odd numbers : {}", sum_odd);
     println!("Sum of even numbers : {}", sum_even);
-
     println!("Total sum : {}", total_sum);
     println!("Duration : {:.4} seconds", duration);
 
     (sum_odd, sum_even, total_sum, duration)
 }
 
-async fn async_computation(max_num: u64) -> (u64, u64, u64, f64) {
-    println!("Async approach with Tokio runtime...");
-
+/// Uses Rayon for data-parallelism.
+fn rayon_parallel_computation(max_num: u64) -> (u64, f64) {
+    println!("Rayon parallel approach...");
     let start = Instant::now();
 
-    let task_odd = task::spawn(async move {
-        let mut total_odd: u64 = 0;
+    let total_sum: u64 = (1..=max_num).into_par_iter().map(sum_to_n).sum();
 
-        for n in (1..=max_num).step_by(2) {
-            total_odd += sum_to_n(n);
-        }
-        total_odd
-    });
+    let duration = start.elapsed().as_secs_f64();
+    println!("Total sum : {}", total_sum);
+    println!("Duration : {:.4} seconds", duration);
 
-    let task_even = task::spawn(async move {
-        let mut total_even: u64 = 0;
+    (total_sum, duration)
+}
 
-        for n in (2..=max_num).step_by(2) {
-            total_even += sum_to_n(n);
-        }
-        total_even
-    });
+async fn async_computation(max_num: u64) -> (u64, u64, u64, f64) {
+    println!("Async approach with Tokio runtime (spawn_blocking)...");
+    let start = Instant::now();
 
-    let sum_odd = task_odd.await.unwrap();
-    let sum_even = task_even.await.unwrap();
+    // Use spawn_blocking for CPU-bound tasks to avoid blocking the async executor.
+    let task_odd = task::spawn_blocking(move || (1..=max_num).step_by(2).map(sum_to_n).sum::<u64>());
+    let task_even = task::spawn_blocking(move || (2..=max_num).step_by(2).map(sum_to_n).sum::<u64>());
+
+    let sum_odd = task_odd.await.expect("Task odd failed");
+    let sum_even = task_even.await.expect("Task even failed");
 
     let total_sum = sum_odd + sum_even;
+    let duration = start.elapsed().as_secs_f64();
 
-    let suration = start.elapsed().as_secs_f64();
-
-    (sum_odd, sum_even, total_sum, suration)
+    (sum_odd, sum_even, total_sum, duration)
 }
 
 #[tokio::main]
@@ -111,21 +83,23 @@ async fn main() {
     const MAX_NUM: u64 = 100_000;
 
     let (single_sum, single_time) = single_thread_computation(MAX_NUM);
+    let (_odd_std, _even_std, multithr_total_sum, mult_duration) = parallel_computation(MAX_NUM);
+    let (rayon_sum, rayon_duration) = rayon_parallel_computation(MAX_NUM);
+    let (odd_async, even_async, async_total_sum, async_duration) = async_computation(MAX_NUM).await;
 
-    let (odd_sum, even_sum, multithr_total_sum, mult_duration) = parallel_computation(MAX_NUM);
-
-    let (odd_sum, even_sum, async_total_sum, async_duration) = async_computation(MAX_NUM).await;
-
-    println!("Cheeeck...");
+    println!("\nVerification...");
     assert_eq!(single_sum, multithr_total_sum);
     assert_eq!(single_sum, async_total_sum);
+    assert_eq!(single_sum, rayon_sum);
+    println!("All results match!");
 
-    println!("Duration...");
-    println!("Single-threaded approach : {:.4} seconds", single_time);
+    println!("\nFinal Comparison:");
+    println!("Single-threaded   : {:.6} seconds", single_time);
+    println!("std::thread       : {:.6} seconds", mult_duration);
+    println!("Rayon (Parallel)  : {:.6} seconds", rayon_duration);
+    println!("Tokio (Blocking)  : {:.6} seconds", async_duration);
 
-    println!("Multi-threaded approach : {:.4} seconds", mult_duration);
-    println!("Async approach : {:.4} seconds", async_duration);
-
-    println!("Even sum : {}", even_sum);
-    println!("Odd sum : {}", odd_sum);
+    println!("\nPartial Results (Async):");
+    println!("Even sum : {}", even_async);
+    println!("Odd sum  : {}", odd_async);
 }
