@@ -10,13 +10,7 @@
 #include <string>
 
 /**
- * Asynchronous TCP Echo Server using C++20 coroutines
- *
- * This server demonstrates:
- * - Boost.Asio coroutines (co_await)
- * - Graceful connection handling
- * - Multi-threaded io_context execution
- * - Proper error handling and logging
+ * Asynchronous TCP Echo Server
  */
 
 using boost::asio::ip::tcp;
