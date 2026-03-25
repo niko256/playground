@@ -11,7 +11,6 @@
  * "" -> ""
  * "a" -> "a"
  *
- *
  */
 
 auto reverse_string(char* str) -> std::string_view {

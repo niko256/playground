@@ -10,12 +10,14 @@ auto reverse_words_in_a_string(std::string& str) -> std::string_view {
 
     size_t start = 0;
 
-    for (size_t i = 0; i <= str.length(); ++i) {
-        if (str[i] == ' ' or i == str.length()) {
-            std::reverse(str.begin() + start, str.begin() + i);
-            start = i + 1;
+    for (size_t curr = 0; curr < str.length(); ++curr) {
+        if (str[curr] == ' ' or curr == str.length() - 1) {
+            std::reverse(str.begin() + start, str.begin() + curr);
+
+            start = curr + 1;
         }
     }
+
     return str;
 }
 

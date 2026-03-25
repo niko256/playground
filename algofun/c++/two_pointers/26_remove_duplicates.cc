@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-std::vector<int> remove_duplicates(std::vector<int>& nums) {
+auto remove_duplicates(std::vector<int>& nums) -> std::vector<int> {
     int ins_pos = 1;
     // индекс равен 1,
     // тк первый элемент гарантированно не является дубликатом
