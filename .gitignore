@@ -1,2 +1,4 @@
 asio/build/
 coroutines/build/
+algofun/c++/build/
+algofun/rs/target/
