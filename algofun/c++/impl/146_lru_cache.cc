@@ -20,7 +20,7 @@ class LruCache {
         : capacity_(capacity) {}
 
     std::optional<Value> get(Key key) {
-        if (cache_map_.find(key) == cache_map_.end()) {
+        if (not cache_map_.contains(key)) {
             return std::nullopt;
         }
 
