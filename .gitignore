@@ -1,4 +1,4 @@
-asio/build/
-coroutines/build/
+c++/asio/build/
+c++/coroutines/build/
 algofun/c++/build/
 algofun/rs/target/
